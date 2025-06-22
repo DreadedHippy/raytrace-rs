@@ -16,20 +16,25 @@ pub mod camera;
 // // Viewport widths less than one are ok since they are real valued.
 // const VIEWPORT_HEIGHT: f64 = 2.0;
 // const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH as f64/IMAGE_HEIGHT as f64);
-fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
     // get (C - Q) and store
     let oc = *center - r.origin();
-    // get quadratic formula values;
-    // get a
-    let a = Vec3::dot(&r.direction(), &r.direction());
-    // get b
-    let b = -2.0 * Vec3::dot(&r.direction(), &oc);
-    // get c
-    let c = Vec3::dot(&oc, &oc) - (radius*radius);
-    // get b^2 - 4ac, the discriminant, to determine the nature of the roots
-    let discriminant = (b*b) - (4.0 * a * c);
+    let a = r.direction().length_squared();
+    let h = Vec3::dot(&r.direction(), &oc);
+    let c = oc.length_squared() - (radius * radius);
+    let discriminant = h*h - a*c;
 
-    discriminant >= 0.0
+    // eprintln!("{:?}", discriminant);
+
+    // return discriminant >= 0.0;
+
+    if discriminant < 0.0 {
+        return -1.0
+    } else {
+        let t1 = (h - f64::sqrt(discriminant))/a;
+        return t1
+    }
+
 }
 
 // My attempt at checking for ray collision with cube
@@ -45,7 +50,7 @@ fn hit_cube(center: &Point3, side_length: f64, ray: &Ray) -> bool {
     // and A be (a, a, a)  then:
     // C-A = (h-a, k-a, l-a),
     // C+A = (h+a, k+a, l+a)
-    // by this the point p must be between C-A and C+A
+    // by this, the point p must be between C-A and C+A
     // i.e C-A <= p <= C+A at any coordinate
     // because p is a function of t
     // C-A <= Q + t*d <= C+A;
@@ -101,13 +106,31 @@ fn hit_cube(center: &Point3, side_length: f64, ray: &Ray) -> bool {
 
 
 fn ray_color(r: &Ray) -> Color {
-    // if hit_sphere(&Point3::from_xyz(0.0, 0.0, -1.0), 0.3, r) {
-    //     return Color::from_xyz(1.0, 0.0, 0.0);
+    let t = hit_sphere(&Point3::from_xyz(0.0, 0.0, -1.0), 0.5, r);
+    // eprintln!("{}", t);
+
+    // if t {
+    //     return Color::from_xyz(1.0, 0.0, 0.0)
     // }
 
-    if hit_cube(&Point3::from_xyz(0.5, 0.5, -1.0), 0.5, r) {
-        return Color::from_xyz(1.0, 0.0, 0.0);
+    if t > 0.0 {
+        // return Color::from_xyz(1.0, 0.0, 0.0);
+        // distance from center to hit point, normalized as the normal vector (all components between -1 and 1)
+        // each component scaled to (0 <= 1)
+        let n = Vec3::unit_vector(&(r.at(t) - Vec3::from_xyz(0.0, 0.0, -1.0)));
+        let color = Color::from_xyz(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+        return 0.5 * color;
     }
+
+    // eprintln!("NO t");
+
+    // if t.is_nan() {
+    //     return Color::from_xyz(1.0, 0.0, 0.0)
+    // }
+
+    // if hit_cube(&Point3::from_xyz(0.5, 0.5, -1.0), 0.5, r) {
+    //     return Color::from_xyz(1.0, 0.0, 0.0);
+    // }
 
     // Scale ray direction to unit vector;
     let unit_direction = Vec3::unit_vector(&r.direction()); // now -1.0 <= y <= 1.0
@@ -152,6 +175,7 @@ fn main() {
         - viewport_u/2.0 // The viewport center is halfway between left and right side so with this we go to the left
         - viewport_v/2.0; // The viewport center is also half-way between top and bottom so with this we go to top-left
 
+    
     // Now to calculate position of upper-left pixel...
     // We know that the pixel grid is inset from the viewport by half the pixel-delta both top and left...
     // which gives us
@@ -165,7 +189,7 @@ fn main() {
         for i in 0..image_width {
             let pixel_center = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
-            let r = Ray::from_values(&pixel_center, &ray_direction);
+            let r = Ray::from_values(&camera_center, &ray_direction);
 
             let pixel_color = ray_color(&r);
             write_color(&pixel_color);

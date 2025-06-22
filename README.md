@@ -63,3 +63,16 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 	, which means that this equation is quadratic. You can solve for a quadratic equation ax2+bx+c=0
 	by using the quadratic formula:  
 	`(−b ± sqrt(b^2−4ac))/2a`
+
+## Shading
+- First, let’s get ourselves a surface normal so we can shade. This is a vector that is perpendicular to the surface at the point of intersection.
+- All normal vectors will be of unit length
+- For a sphere, the outward normal is in the direction of the hit point minus the center e.g the vector from the earth's center to you point's straight up
+- Without lights, we can visualize the normals with a color map.
+- A common trick for visualizing normals (because it’s easy and somewhat intuitive to assume n is a unit length vector — so each component is between −1 and 1) is to map each component to the interval from 0 to 1, and then map (x,y,z) to (red,green,blue)
+- We are currently calculating just whether the ray hit the sphere or not, for the normal, we'd need to know the hit point.
+- Because we only have one sphere directly in front of the camera, no need to worry about negative values of `t` yet.
+- The closest hit point i.e smallest `t` is the point we want
+
+
+
