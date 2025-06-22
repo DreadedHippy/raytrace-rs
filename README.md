@@ -55,6 +55,11 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 	- Expanding terms 1 and 2  
 	`(C - Q - t*d) • (C - Q - t*d) = r^2`  
 	=> `(-td + (C-Q)) • (-td + (C-Q)) = r^2;  
-	- Following the rules of vector algebra, we distribute the product:
-	See image below for full explanation:
+	- Following the rules of vector algebra, we distribute the product:  
+	`t^2d⋅d − 2td⋅(C−Q) + (C−Q)⋅(C−Q) = r2`
+	See image below for full explanation:  
 	![alt text](image.png)
+	- The only vectors that we have are reduced to scalars by dot product. The only unknown is t, and we have a t^2
+	, which means that this equation is quadratic. You can solve for a quadratic equation ax2+bx+c=0
+	by using the quadratic formula:  
+	`(−b ± sqrt(b^2−4ac))/2a`

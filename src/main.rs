@@ -1,3 +1,4 @@
+use core::f64;
 use crate::{color::{write_color, Color}, ray::Ray, vec3::{Point3, Vec3}};
 
 
@@ -15,12 +16,103 @@ pub mod camera;
 // // Viewport widths less than one are ok since they are real valued.
 // const VIEWPORT_HEIGHT: f64 = 2.0;
 // const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH as f64/IMAGE_HEIGHT as f64);
+fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> bool {
+    // get (C - Q) and store
+    let oc = *center - r.origin();
+    // get quadratic formula values;
+    // get a
+    let a = Vec3::dot(&r.direction(), &r.direction());
+    // get b
+    let b = -2.0 * Vec3::dot(&r.direction(), &oc);
+    // get c
+    let c = Vec3::dot(&oc, &oc) - (radius*radius);
+    // get b^2 - 4ac, the discriminant, to determine the nature of the roots
+    let discriminant = (b*b) - (4.0 * a * c);
+
+    discriminant >= 0.0
+}
+
+// My attempt at checking for ray collision with cube
+// Parallel ray epsilon
+const E: f64 = 0.000001;
+fn hit_cube(center: &Point3, side_length: f64, ray: &Ray) -> bool {
+    // A cube in 3d geometric space at origin (0, 0, 0) with side length 2a
+    // i.e, sides extend from -a to +a is defined by the inequalities
+    // -a <= x <= a, -a <= y <= a, -a <= z <= a
+    // starting from origin h, k, l gives us
+    // h-a <= x <= h+a, k-a <= y <= k+a, l-a <= z <= l+a
+    // let p be a point with coordinates (x, y, z) and C be the cube center (h, k, l),
+    // and A be (a, a, a)  then:
+    // C-A = (h-a, k-a, l-a),
+    // C+A = (h+a, k+a, l+a)
+    // by this the point p must be between C-A and C+A
+    // i.e C-A <= p <= C+A at any coordinate
+    // because p is a function of t
+    // C-A <= Q + t*d <= C+A;
+    // taking each inequality:
+    // left inequality
+    // C-A <= Q + t*d;
+    // C-A - Q <= t*d;
+    // right inequality
+    // Q + t*d <= C+A;
+    // t*d <= C+A - Q;
+    // hence:
+    // (C-A-Q) <= t*d <= (C+A-Q);
+    // let's code it up
+
+    let c = *center; // C
+    let a = side_length/2.0;
+    let a = Vec3::from_xyz(a, a, a); // A
+    let q = ray.origin(); // Q
+    let v1 = c-a;
+    let v2 = c+a;
+    let d = Vec3::unit_vector(&ray.direction());
+    // if v1 <= t*d <= v2 for any given t
+    // let set our t between 0, and infinity i.e f64::MAX
+
+    // check for x
+
+    let mut t_min = 0.0_f64;
+    let mut t_max = f64::MAX;
+
+    for (((v1, v2), q), d) in v1.iter().zip(v2.iter()).zip(q.iter()).zip(d.iter()) {
+        let mut t1 = (v1 - q)/d;
+        let mut t2 = (v2 - q)/d;
+
+        if d.abs() < E {
+            if q < v1 || q > v2 {
+                return false
+            }
+        } else {
+
+            if t1 > t2 {(t1, t2) = (t2, t1)}
+
+            t_min = t_min.max(t1);
+            t_max = t_max.min(t2);
+
+            if t_min > t_max {return false}
+        }
+
+        // eprintln!("{:?}", (t_min, t_max))
+    }
+
+    return true;
+}
+
 
 fn ray_color(r: &Ray) -> Color {
+    // if hit_sphere(&Point3::from_xyz(0.0, 0.0, -1.0), 0.3, r) {
+    //     return Color::from_xyz(1.0, 0.0, 0.0);
+    // }
+
+    if hit_cube(&Point3::from_xyz(0.5, 0.5, -1.0), 0.5, r) {
+        return Color::from_xyz(1.0, 0.0, 0.0);
+    }
+
     // Scale ray direction to unit vector;
     let unit_direction = Vec3::unit_vector(&r.direction()); // now -1.0 <= y <= 1.0
     let a = 0.5 * (unit_direction.y() + 1.0); // a is the equivalent of y in the interval 0.0, 1.0, i,e 0.0 <= a <= 1.0
-    (1.0-a)*Color::from_xyz(1.0, 1.0, 1.0) + a*Color::from_xyz(0.5, 0.7, 1.0)
+    ((1.0-a)*Color::from_xyz(1.0, 1.0, 1.0)) + (a*Color::from_xyz(0.5, 0.7, 1.0))
 }
 
 
@@ -65,15 +157,12 @@ fn main() {
     // which gives us
     let pixel00_loc = viewport_upper_left + (0.5 * (pixel_delta_u + pixel_delta_v));
 
-    let img_width = 256;
-    let img_height = 256;
-
     // Render
-    println!("P3\n{} {}\n255", img_width, img_height);
+    println!("P3\n{} {}\n255", image_width, image_height);
 
-    for j in 0..img_height {
-        eprintln!("\rScanlines remaining: {}", (img_height - j));
-        for i in 0..img_width {
+    for j in 0..image_height {
+        eprintln!("\rScanlines remaining: {}", (image_height - j));
+        for i in 0..image_width {
             let pixel_center = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
             let r = Ray::from_values(&pixel_center, &ray_direction);

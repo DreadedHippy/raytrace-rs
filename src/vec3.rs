@@ -52,6 +52,10 @@ impl Vec3 {
       return *v / v.length()
     }
 
+    pub fn iter(&self) -> Vec3Iterator {
+        Vec3Iterator { vec3: self, index: 0 }
+    }
+
 }
 
 impl Index<usize> for Vec3 {
@@ -156,6 +160,33 @@ impl Neg for Vec3 {
     fn neg(self) -> Self::Output {
         let e = self.e;
         Self{e: [-e[0], -e[1], -e[2]]}
+    }
+}
+
+
+
+pub struct Vec3Iterator<'a> {
+    vec3: &'a Vec3,
+    index: usize
+}
+
+impl<'a> Iterator for Vec3Iterator<'a> {
+    type Item = f64;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        // for the 3 fields x, y, z
+        if self.index < 3 {
+            let res = match self.index {
+                0 => Some(self.vec3.x()),
+                1 => Some(self.vec3.y()),
+                2 => Some(self.vec3.z()),
+                _ => None
+            };
+            self.index += 1;
+            res
+        } else {
+            None
+        }
     }
 }
 
