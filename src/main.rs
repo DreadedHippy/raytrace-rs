@@ -116,11 +116,17 @@ fn ray_color(r: &Ray) -> Color {
     if t > 0.0 {
         // return Color::from_xyz(1.0, 0.0, 0.0);
         // distance from center to hit point, normalized as the normal vector (all components between -1 and 1)
-        let n = Vec3::unit_vector(&(r.at(t) - Vec3::from_xyz(0.0, 0.0, -1.0)));
         // each component scaled to (0 <= 1)
+        let n = Vec3::unit_vector(&(r.at(t) - Vec3::from_xyz(0.0, 0.0, -1.0)));
         let color = Color::from_xyz(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
         return 0.5 * color;
     }
+
+    // eprintln!("NO t");
+
+    // if t.is_nan() {
+    //     return Color::from_xyz(1.0, 0.0, 0.0)
+    // }
 
     // if hit_cube(&Point3::from_xyz(0.5, 0.5, -1.0), 0.5, r) {
     //     return Color::from_xyz(1.0, 0.0, 0.0);
@@ -169,6 +175,7 @@ fn main() {
         - viewport_u/2.0 // The viewport center is halfway between left and right side so with this we go to the left
         - viewport_v/2.0; // The viewport center is also half-way between top and bottom so with this we go to top-left
 
+    
     // Now to calculate position of upper-left pixel...
     // We know that the pixel grid is inset from the viewport by half the pixel-delta both top and left...
     // which gives us
@@ -182,7 +189,7 @@ fn main() {
         for i in 0..image_width {
             let pixel_center = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
             let ray_direction = pixel_center - camera_center;
-            let r = Ray::from_values(&pixel_center, &ray_direction);
+            let r = Ray::from_values(&camera_center, &ray_direction);
 
             let pixel_color = ray_color(&r);
             write_color(&pixel_color);
