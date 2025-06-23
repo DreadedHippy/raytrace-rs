@@ -1,11 +1,14 @@
 use core::f64;
-use crate::{color::{write_color, Color}, ray::Ray, vec3::{Point3, Vec3}};
+use crate::{color::{write_color, Color}, hittable::{HitRecord, Hittable}, hittable_list::HittableList, ray::Ray, sphere::Sphere, vec3::{Point3, Vec3}};
 
 
 pub mod vec3;
 pub mod color;
 pub mod ray;
 pub mod camera;
+pub mod hittable;
+pub mod hittable_list;
+pub mod sphere;
 
 // const ASPECT_RATIO: f64 = 16.0/9.0;
 // const IMAGE_WIDTH: i32 = 400;
@@ -18,6 +21,7 @@ pub mod camera;
 // const VIEWPORT_WIDTH: f64 = VIEWPORT_HEIGHT * (IMAGE_WIDTH as f64/IMAGE_HEIGHT as f64);
 fn hit_sphere(center: &Point3, radius: f64, r: &Ray) -> f64 {
     // get (C - Q) and store
+    // Assume b in the quadratic eqn = -2h, you'd see how we got a c, h
     let oc = *center - r.origin();
     let a = r.direction().length_squared();
     let h = Vec3::dot(&r.direction(), &oc);
@@ -105,22 +109,22 @@ fn hit_cube(center: &Point3, side_length: f64, ray: &Ray) -> bool {
 }
 
 
-fn ray_color(r: &Ray) -> Color {
-    let t = hit_sphere(&Point3::from_xyz(0.0, 0.0, -1.0), 0.5, r);
-    // eprintln!("{}", t);
+fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+    let mut rec = HitRecord::new();
 
-    // if t {
-    //     return Color::from_xyz(1.0, 0.0, 0.0)
-    // }
-
-    if t > 0.0 {
-        // return Color::from_xyz(1.0, 0.0, 0.0);
-        // distance from center to hit point, normalized as the normal vector (all components between -1 and 1)
-        // each component scaled to (0 <= 1)
-        let n = Vec3::unit_vector(&(r.at(t) - Vec3::from_xyz(0.0, 0.0, -1.0)));
-        let color = Color::from_xyz(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
-        return 0.5 * color;
+    if (world.hit(r, 0.0, f64::INFINITY, &mut rec)) {
+        return 0.5 * (rec.normal + Color::from_xyz(1.0, 1.0, 1.0))
     }
+
+
+    // if t > 0.0 {
+    //     // return Color::from_xyz(1.0, 0.0, 0.0);
+    //     // distance from center to hit point, normalized as the normal vector (all components between -1 and 1)
+    //     // each component scaled to (0 <= 1)
+    //     let n = Vec3::unit_vector(&(r.at(t) - Vec3::from_xyz(0.0, 0.0, -1.0)));
+    //     let color = Color::from_xyz(n.x() + 1.0, n.y() + 1.0, n.z() + 1.0);
+    //     return 0.5 * color;
+    // }
 
     // eprintln!("NO t");
 
@@ -148,6 +152,13 @@ fn main() {
 
     // Calculate the image height, and ensure that it's at least 1.
     let image_height = ((image_width as f64/ aspect_ratio) as i32).max(1);
+
+    // World
+    let mut world = HittableList::new();
+    world.add(Box::new(Sphere::new(&Point3::from_xyz(0.0, 0.0, -1.0), 0.5)));
+    // world.add(Box::new(Sphere::new(&Point3::from_xyz(0.25, 0.0, -1.0), 0.5)));
+    world.add(Box::new(Sphere::new(&Point3::from_xyz(0.0, -100.5, -1.0), 100.0)));
+
 
     // Camera
     let focal_length = 1.0; // distance from viewport to camera
@@ -191,7 +202,7 @@ fn main() {
             let ray_direction = pixel_center - camera_center;
             let r = Ray::from_values(&camera_center, &ray_direction);
 
-            let pixel_color = ray_color(&r);
+            let pixel_color = ray_color(&r, &world);
             write_color(&pixel_color);
         }
         eprint!("\rDone         ");

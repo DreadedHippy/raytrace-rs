@@ -72,7 +72,13 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 - A common trick for visualizing normals (because it’s easy and somewhat intuitive to assume n is a unit length vector — so each component is between −1 and 1) is to map each component to the interval from 0 to 1, and then map (x,y,z) to (red,green,blue)
 - We are currently calculating just whether the ray hit the sphere or not, for the normal, we'd need to know the hit point.
 - Because we only have one sphere directly in front of the camera, no need to worry about negative values of `t` yet.
-- The closest hit point i.e smallest `t` is the point we want
+- The closest hit point i.e smallest `t` is the point we want.
+- The second design decision for normals is whether they should always point out.
+- Currently, if the ray intersects the sphere from the outside, the normal points **against** the ray. If the ray intersects the sphere from the inside, the normal (which always points out) points **with** the ray. 
+- Alternatively, we can have the normal always point against the ray. If the ray is outside the sphere, the normal will point **outward**, but if the ray is inside the sphere, the normal will point **inward**.
+- If we decide to have the normals always point out from the center of the object, then we will need to determine which side the ray is on when we color it. We can figure this out by comparing the ray with the normal. If the ray and the normal face in the same direction, the ray is inside the object, if the ray and the normal face in the opposite direction, then the ray is outside the object. This can be determined by taking the dot product of the two vectors, where if their dot is positive, the ray is inside the sphere.
+- We can set things up so that normals always point “outward” from the surface, or always point against the incident ray. This decision is determined by whether you want to determine the side of the surface at the time of geometry intersection or at the time of coloring. In this book we have more material types than we have geometry types, so we'll go for less work and put the determination at geometry time. This is simply a matter of preference.
+
 
 
 
