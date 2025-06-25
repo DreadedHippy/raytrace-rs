@@ -1,7 +1,7 @@
 use std::{fmt::Debug, ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub}};
 
 /// A struct for implementing geometric vectors
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Default)]
 pub struct Vec3 {
     e: [f64; 3]
 }

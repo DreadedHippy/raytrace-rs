@@ -78,7 +78,28 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 - Alternatively, we can have the normal always point against the ray. If the ray is outside the sphere, the normal will point **outward**, but if the ray is inside the sphere, the normal will point **inward**.
 - If we decide to have the normals always point out from the center of the object, then we will need to determine which side the ray is on when we color it. We can figure this out by comparing the ray with the normal. If the ray and the normal face in the same direction, the ray is inside the object, if the ray and the normal face in the opposite direction, then the ray is outside the object. This can be determined by taking the dot product of the two vectors, where if their dot is positive, the ray is inside the sphere.
 - We can set things up so that normals always point “outward” from the surface, or always point against the incident ray. This decision is determined by whether you want to determine the side of the surface at the time of geometry intersection or at the time of coloring. In this book we have more material types than we have geometry types, so we'll go for less work and put the determination at geometry time. This is simply a matter of preference.
-
+----
+- To shade a cube, the normal of the cube is simply perpendicular to the face hit, so we can check for the axis of the hitpoint and get the normal from that face to use in our HitRecord
+## Interval
+- Now we'll implement real-valued intervals with a minimum and maximum
+- This helps to keep track of ray min and max precisely, essentially cleaner code
+## Camera
+- Now, we consolidate our camera and scene-render code into a single new class: the `camera` class
+- Camera does the following:
+	1. Construct and dispatch rays into the world.
+	2. Use the results of these rays to construct the rendered image.
+## Antialiasing
+- The stair-stepping in the generated images is commonly referred to as “aliasing”, or “jaggies”.
+- When a real camera takes a picture, there are usually no jaggies along edges, because the edge pixels are a blend of some foreground and some background because unlike our rendered image, a true image has infinite resolution.
+- We can get the same effect by averaging a bunch of pixels
+- With a single ray through the center of each pixel, we are performing what is commonly called **point sampling**.
+- The problem with **point sampling** can be illustrated by rendering a small checkerboard far away. If this checkerboard consists of an 8×8 grid of black and white tiles, but only four rays hit it, then all four rays might intersect only white tiles, or only black, or some odd combination. In the real world, when we perceive a checkerboard far away with our eyes, we perceive it as a gray color, instead of sharp points of black and white.
+- Because our eyes are naturally doing what we want our ray tracer to do: integrate the (continuous function of) light falling on a particular (discrete) region of our rendered image.
+- We want to sample the light falling around the pixel, and then integrate those samples to approximate the true continuous result. So, how do we integrate the light falling around the pixel?
+- We'll adopt the simplest model: sampling the square region centered at the pixel that extends halfway to each of the four neighboring pixels.
+- For a single pixel composed of multiple samples, we'll select samples from the area surrounding the pixel and average the resulting light (color) values together.
+- To do this, we'll add the full color from each iteration *(read sample)*, and then finish with a single division (by the number of samples) at the end, before writing out the color.
+To ensure that the color components *(r, g, b)* of the final result remain within the proper [0,1] bounds, we'll clamp it to [0, 1]
 
 
 
