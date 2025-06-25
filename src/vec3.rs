@@ -1,4 +1,7 @@
+use core::f64;
 use std::{fmt::Debug, ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub}};
+
+use crate::rand::{random_f64, random_f64_range};
 
 /// A struct for implementing geometric vectors
 #[derive(Clone, Copy, Default)]
@@ -11,8 +14,8 @@ impl Vec3 {
         Self{e: [0.0, 0.0, 0.0]}
     }
 
-    pub fn from_xyz(e0: f64, e1: f64, e2: f64) -> Self {
-        Self{e: [e0, e1, e2]}
+    pub fn from_xyz(x: f64, y: f64, z: f64) -> Self {
+        Self{e: [x, y, z]}
     }
 
     pub fn x(&self) -> f64 {self.e[0]}
@@ -26,6 +29,14 @@ impl Vec3 {
     pub fn length_squared(&self) -> f64 {
         let e = self.e;
         return (e[0]*e[0]) + (e[1]*e[1]) + (e[2]*e[2]);
+    }
+
+    pub fn random() -> Self {
+        return Self::from_xyz(random_f64(), random_f64(), random_f64())
+    }
+
+    pub fn random_range(min: f64, max: f64) -> Self {
+        return Self::from_xyz(random_f64_range(min, max), random_f64_range(min, max), random_f64_range(min, max))
     }
 
     pub fn dot(&self, other: &Self) -> f64{
@@ -193,6 +204,29 @@ impl<'a> Iterator for Vec3Iterator<'a> {
 
 pub type Point3 = Vec3;
 
+/// Returns a random unit vector
+pub fn random_unit_vector() -> Vec3 {
+    loop {
+        let p = Vec3::random_range(-1.0, 1.0);
+        let lensq = p.length_squared();
+        // black hole point
+        let blackhole = 1e-160;
+        if (blackhole < lensq && lensq <= 1.0) {
+            return p/lensq.sqrt()
+        }
+    }
+}
 
 
-
+pub fn random_on_hemisphere(normal: &Vec3) -> Vec3{
+    // get random vector satisfying criteria
+    let on_unit_sphere = random_unit_vector();
+    // check angle between random and normal, if > 0 i.e, same hemisphere as normal
+    if Vec3::dot(&on_unit_sphere, normal) > 0.0 {
+        // return
+        return on_unit_sphere
+    } else {
+        // invert the vector, and now it definitely is in the same hemisphere as normal
+        return -on_unit_sphere
+    }
+}

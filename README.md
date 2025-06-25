@@ -99,7 +99,66 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 - We'll adopt the simplest model: sampling the square region centered at the pixel that extends halfway to each of the four neighboring pixels.
 - For a single pixel composed of multiple samples, we'll select samples from the area surrounding the pixel and average the resulting light (color) values together.
 - To do this, we'll add the full color from each iteration *(read sample)*, and then finish with a single division (by the number of samples) at the end, before writing out the color.
-To ensure that the color components *(r, g, b)* of the final result remain within the proper [0,1] bounds, we'll clamp it to [0, 1]
+- To ensure that the color components *(r, g, b)* of the final result remain within the proper [0,1] bounds, we'll clamp it to [0, 1]
 
+## Diffuse materials
+- Now that we have objects and multiple rays per pixel, we can make some realistic looking materials.
+- Starting with diffuse materials a.k.a **matte**
+- We have to choose between mixing and matching geometry and materials, or tightly binding them together
+	- The former allows us to assign a material to multiple spheres or vice-versa
+	- The latter can be useful for procedural objects where geometry and material are linked
+- For the purpose of this project, we will go with the former, i.e, separate.
 
+### A simple diffuse material
+- Diffuse material do NOT emit light but take on light of their surroundings and modulate that with their own intrinsic color
+- Light that reflects off a diffuse surface has it's direction randomized
+- This light may also be absorbed instead of deflected.
+- The likelihood of absorption increases with darkness of the surface
+- Really any algorithm that randomizes direction will produce surfaces that look matte.
+- Starting with the most intuitive algorithm: A material that randomly bounces a ray in any direction with equal probability
+- For this material, a ray that hits the surface has an equal probability of bouncing in any direction away from the surface.
+- This is the simplest kind of diffuse
+- First we need the ability to generate arbitrary random vectors
+- Then we need to figure out how to manipulate a random vector so that we only get results that are on the surface of a hemisphere.
+- Alot of the analytical methods to do this are complicated, hence we'll be using a rejection method:
+	- Reject every random generation until we get one satisfying our criteria
+- We'll also be going for the simplest rejection method algorithm which is:
+	1. Generate a random vector inside the unit sphere (sphere of radius 1).
+	2. Normalize this vector to extend it to the sphere surface.
+	3. Invert the normalized vector if it falls onto the wrong hemisphere
+- We'll perform step 1 by picking a random point inside a cube enclosing the unit sphere i.e x,y,z all in the range (-1, 1)
+- If this point lies outside the unit sphere, reject, else choose
+- Normalize this vector (from point to sphere center) to make unit vector
+- Since floating-point numbers have finite precision, a very small value can underflow to zero when squared.
+- So if all three coordinates are small enough (that is, our point very near the center of the sphere), the norm of the vector will be zero, and thus normalizing will yield the bogus vector [±∞,±∞,±∞]
+- We create a "black hole" range and reject any point within this black hole
+- Now that we have a random unit vector, we can determine if it is on the correct hemisphere by comparing against the surface normal (i.e, the angle between them must be at most 90 degrees)
+- If a ray bounces off of a material and keeps 100% of its color, then we say that the material is white.
+- If it instead keeps 0% of its color, then we say that the material is black.
+- Let's first set our `ray_color` to return 50% of the color from a bounce, we should get a nice gray
+### Fixing shadow Acne
+- A ray will attempt to accurately calculate the intersection point when it intersects with a surface. Unfortunately, this calculation is susceptible to floating point rounding errors which can cause the intersection point to be ever so slightly off.
+- This means that the origin of the next ray, the ray that is randomly scattered off of the surface, is unlikely to be perfectly flush with the surface. It might be just above the surface. It might be just below the surface.
+- If the ray's origin is just below the surface then it could intersect with that surface again. Which means that it will immediately find the nearest surface at t=0.00000001 or whatever floating point approximation the hit function gives us.
+- The simplest hack to address this is just to ignore hits that are very close to the calculated intersection point e.g instead of starting `t` from 0.00, we start from 0.01
+### True Lambertian Reflection
+- A more accurate representation of real diffuse objects is the Lambertian distribution.
+- This distribution scatters reflected rays in a manner that is proportional to cos(ϕ), where ϕ is the angle between the reflected ray and the surface normal.
+- This means that a reflected ray is most likely to scatter in a direction near the surface normal, and less likely to scatter in directions away from the normal.
+- At the point of intersection of ray and sphere, there is a hit point, `p`, and surface normal `n`.
+- There can only be two unique unit spheres tangent to any intersection point (one unique sphere for each side of the surface).
+- We are concerned with the unit sphere on the outside which has a center `p+n`
+- Pick a random point `S` on this outside unit sphere, this is the vector `S-p`
+- Notice more pronounced shadow and spheres takes sky tint if you change sky color
+### Using Gamma correction for accurate color intensity
+- Notice how even though we reflect 50% of all light, the sphere looks darker than it should, our shadow should look much darker than sphere
+- You can observe by changing reflectance to 0.1, 0.3, 0.5, 0.7, 0.9
+- Notice how 70 is closer to the halfway point.
+- The reason for this is that almost all computer programs assume that an image is “gamma corrected” before being written into an image file.
+- "Gamma corrected" means that the 0 to 1 values have some transform applied before being stored as a byte.
+- Images with data that are written without being transformed are said to be in linear space, whereas images that are transformed are said to be in gamma space. It is likely that the image viewer you are using is expecting an image in gamma space, but we are giving it an image in linear space. This is the reason why our image appears inaccurately dark.
+- There are many good reasons for why images should be stored in gamma space, but for our purposes we just need to be aware of it.
+- As a simple approximation, we can use “gamma 2” as our transform, which is the power that you use when going from gamma space to linear space.
+- We need to go from linear space to gamma space, which means taking the inverse of “gamma 2", which means an exponent of 1/gamma
+, which is just the square-root. We'll also want to ensure that we robustly handle negative inputs.
 

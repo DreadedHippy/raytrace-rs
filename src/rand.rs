@@ -1,18 +1,95 @@
+use std::cell::{Cell, OnceCell};
+
 
 const KX: u32 = 123456789;
 const KY: u32 = 362436069;
 const KZ: u32 = 521288629;
 const KW: u32 = 88675123;
- 
+
+
+thread_local! {
+	static RANDOM: Cell<Rand> = const { Cell::new(Rand {x: KX, y: KY, z: KZ, w: KW}) };
+}
+
+
+fn rand() -> u32 {
+	// get
+	let mut s = RANDOM.get();
+
+	// mutate
+	let result = s.rand();
+
+	// set
+	RANDOM.set(s);
+
+	return result;
+}
+
+pub fn shuffle<T>(a: &mut [T]) {
+	let mut s = RANDOM.get();
+
+	let result = s.shuffle(a);
+
+	RANDOM.set(s);
+
+	return result;
+}
+
+
+
+pub fn rand_range(a: i32, b: i32) -> i32 {
+	// get
+	let mut s = RANDOM.get();
+
+	// mutate
+	let result = s.rand_range(a, b);
+
+	// set
+	RANDOM.set(s);
+
+	return result;
+}
+
+fn rand_float() -> f64 {
+	let mut s = RANDOM.get();
+
+	let result = s.rand_float();
+
+	RANDOM.set(s);
+
+	return result;
+}
+
+pub fn random_f64() -> f64 {
+	let mut s = RANDOM.get();
+
+	let result = s.random_f64();
+
+	RANDOM.set(s);
+
+	return result;
+}
+
+pub fn random_f64_range(min: f64, max: f64) -> f64 {
+	let mut s = RANDOM.get();
+
+	let result = s.random_f64_range(min, max);
+
+	RANDOM.set(s);
+
+	return result
+}
+
 // Random
-pub struct Rand {
+#[derive(Clone, Copy)]
+struct Rand {
   x: u32, y: u32, z: u32, w: u32
 }
 
 impl Default for Rand {
-		fn default() -> Self {
-			Self::new(0)
-		}
+	fn default() -> Self {
+		Self::new(0)
+	}
 }
  
 impl Rand{

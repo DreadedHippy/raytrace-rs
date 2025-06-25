@@ -1,17 +1,17 @@
-use crate::{color::{write_color, Color}, hittable::{HitRecord, Hittable}, interval::Interval, rand::Rand, ray::Ray, vec3::{Point3, Vec3}};
+use crate::{color::{write_color, Color}, hittable::{HitRecord, Hittable}, interval::Interval, rand::random_f64, ray::Ray, vec3::{random_on_hemisphere, random_unit_vector, Point3, Vec3}};
 
 #[derive(Default)]
 pub struct Camera {
 	pub aspect_ratio: f64,
 	pub image_width: i32, // rendered image width in pixel count
 	pub samples_per_pixel: i32, // count of random samples for each pixel
+	pub max_depth: i32,
 	image_height: i32, // Rendered image height
 	center: Point3, // Camera center
 	pixel00_loc: Point3, // Location of pixel 0, 0
 	pixel_delta_u: Vec3, // top-bottom pixel-pixel distance
 	pixel_delta_v: Vec3, // left-right pixel-pixel distance
 	pixel_samples_scale: f64, // Color scale factor for a sum of pixel samples
-	random: Rand, // instance of RNG to keep RNG state
 }
 
 impl Camera {
@@ -20,7 +20,7 @@ impl Camera {
 		c.aspect_ratio = 1.0;
 		c.image_width = 100;
 		c.samples_per_pixel = 10;
-		c.random = Rand::new(0);
+		c.max_depth = 10;
 
 		c
 	}
@@ -48,7 +48,7 @@ impl Camera {
 
 				for _sample in 0..self.samples_per_pixel {
 					let r = self.get_ray(i, j);
-					pixel_color += Self::ray_color(&r, world);
+					pixel_color += Self::ray_color(&r, self.max_depth, world);
 				}
 				// let pixel_center = pixel00_loc + (i as f64 * pixel_delta_u) + (j as f64 * pixel_delta_v);
 				// // let ray_center = Vec3::from_xyz(pixel_center.x(), pixel_center.y(), center.z());
@@ -115,14 +115,19 @@ impl Camera {
 
 	fn sample_square(&mut self) -> Vec3 {
 		// Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
-		return Vec3::from_xyz(self.random.rand_float() - 0.5,self.random.rand_float() - 0.5, 0.0);
+		return Vec3::from_xyz(random_f64() - 0.5,random_f64() - 0.5, 0.0);
 	}
 
-	fn ray_color(r: &Ray, world: &dyn Hittable) -> Color {
+	fn ray_color(r: &Ray, depth: i32, world: &dyn Hittable) -> Color {
+		if depth <= 0 {
+			return Color::new()
+		}
+
 		let mut rec = HitRecord::new();
 
-		if (world.hit(r, &Interval::from_values(0.0, f64::INFINITY), &mut rec)) {
-			return 0.5 * (rec.normal + Color::from_xyz(1.0, 1.0, 1.0))
+		if (world.hit(r, &Interval::from_values(0.001, f64::INFINITY), &mut rec)) {
+			let direction = rec.normal + random_unit_vector();
+			return 0.3 * Self::ray_color(&Ray::from_values(&rec.p, &direction), depth - 1, world);
 		}
 
 		// Scale ray direction to unit vector;
