@@ -6,6 +6,9 @@ pub struct Ray {
 }
 
 impl Ray {
+	pub fn new() -> Self {
+		Self { orig: Point3::new(), dir: Vec3::new() }
+	}
 	pub fn from_values(origin: &Point3, direction: &Vec3) -> Self {
 		Self {
 			orig: *origin,

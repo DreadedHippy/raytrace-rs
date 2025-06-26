@@ -67,6 +67,11 @@ impl Vec3 {
         Vec3Iterator { vec3: self, index: 0 }
     }
 
+    pub fn near_zero(&self) -> bool {
+        let s = 1e-8;
+        return self.x().abs() < s && self.y().abs() < s && self.z().abs() < s
+    }
+
 }
 
 impl Index<usize> for Vec3 {
@@ -229,4 +234,16 @@ pub fn random_on_hemisphere(normal: &Vec3) -> Vec3{
         // invert the vector, and now it definitely is in the same hemisphere as normal
         return -on_unit_sphere
     }
+}
+
+pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
+    // reflected ray direction of a ray v = v + 2b where b is height of v parallel to the normal
+    // n is unit vector of len 1 but v may not be
+    // To get b, we scale normal vector by the length of the projection of v onto n
+    // basically perpendicular height of v as said before
+    // this is given by dot product of v and n
+    // if n were not a unit vector, we'd also need to divide this dot product by length of n i.e, normalize it
+    // now v point onto the surface and we want the reflection to point out of the surface
+    // so v+2b becomes v-2b
+    return *v - (2.0 * (Vec3::dot(v, n) * *n))
 }

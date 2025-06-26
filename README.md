@@ -162,3 +162,26 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 - We need to go from linear space to gamma space, which means taking the inverse of “gamma 2", which means an exponent of 1/gamma
 , which is just the square-root. We'll also want to ensure that we robustly handle negative inputs.
 
+## Abstract class for Materials ( Trait for Materials )
+- If we want different objects to have different materials, we have a design decision to make
+	- We could have a universal material type with lots of parameters so any individual material type could just ignore the parameters that don't affect it.
+	- Or we could have an abstract material class that encapsulates unique behavior.
+	- We will go with the latter.
+- Each Material should:
+	1. Produce a scattered ray (or say it absorbed the incident ray).
+	2. If scattered, say how much the ray should be attenuated.
+- When the ray_color() routine gets the `hit_record` it can call member functions of the material pointer to find out what ray, if any, is scattered.
+- To achieve this, `hit_record` needs to be told the material that is assigned to the sphere
+### Modelling light scatter and reflectance
+- Our HitRecord holds a bunch of data, can also hold material hit (basically an encapsulation of arguments)
+- When the `ray_color()` routine gets the `hit_record` it can call member functions of the material pointer to find out what ray, if any, is scattered.
+- Here and throughout these books we will use the term albedo (Latin for “whiteness”).
+- Albedo is a term used to define some form of fractional reflectance
+- Albedo will vary with material color and (as we will later implement for glass materials) can also vary with incident viewing direction (the direction of the incoming ray).
+- Lambertian (diffuse) reflectance can either always scatter and attenuate light according to its reflectance `R`, or it can sometimes scatter (with probability 1−R) with no attenuation (where a ray that isn't scattered is just absorbed into the material).
+- It could also be a mixture of both those strategies.
+- Attenuation of light refers to the gradual decrease in the intensity of light as it propagates through a medium.
+- We will choose to always scatter, so implementing Lambertian materials becomes a simple task.
+- In our implementation of Lambertian reflection, we could scatter with some fixed probability p and have attenuation be albedo/p
+- In out implementation, if we have our random_vector, and normal_vector add up to 0, we may get some undesired behavior (infinities, NaNa), so we account for that by checking if the resultant vector is near zero and replacing it with hit_record normal if true.
+

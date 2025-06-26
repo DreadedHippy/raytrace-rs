@@ -126,8 +126,13 @@ impl Camera {
 		let mut rec = HitRecord::new();
 
 		if (world.hit(r, &Interval::from_values(0.001, f64::INFINITY), &mut rec)) {
-			let direction = rec.normal + random_unit_vector();
-			return 0.3 * Self::ray_color(&Ray::from_values(&rec.p, &direction), depth - 1, world);
+			let mut scattered = Ray::new();
+			let mut attenuation = Color::new();
+
+			if rec.mat.scatter(r, &rec, &mut attenuation, &mut scattered) {
+				return attenuation * Self::ray_color(&scattered, depth-1, world)
+			}
+			return Color::new();
 		}
 
 		// Scale ray direction to unit vector;
