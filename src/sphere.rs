@@ -1,15 +1,15 @@
-use std::rc::Rc;
+use std::{sync::{Arc, Mutex}};
 
-use crate::{hittable::{HitRecord, Hittable}, interval::Interval, material::{Mat, Material}, ray::Ray, vec3::{Point3, Vec3}};
+use crate::{hittable::{HitRecord, Hittable}, interval::Interval, material::{Material}, ray::Ray, vec3::{Point3, Vec3}};
 
 pub struct Sphere {
   center: Point3,
   radius: f64,
-	mat: Rc<dyn Material>
+	mat: Arc<dyn Material>
 }
 
 impl Sphere {
-  	pub fn new(center: &Point3, radius: f64, mat: Rc<dyn Material>) -> Self {
+  	pub fn new(center: &Point3, radius: f64, mat: Arc<dyn Material>) -> Self {
     	Self {center: center.clone(), radius: f64::max(0.0, radius), mat}
   	}
 }

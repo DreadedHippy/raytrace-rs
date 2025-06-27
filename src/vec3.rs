@@ -247,3 +247,19 @@ pub fn reflect(v: &Vec3, n: &Vec3) -> Vec3 {
     // so v+2b becomes v-2b
     return *v - (2.0 * (Vec3::dot(v, n) * *n))
 }
+
+pub fn refract(uv: &Vec3, n: &Vec3, eta_i_over_eta_t: f64) -> Vec3{
+    let cos_theta = f64::min(Vec3::dot(&-*uv, n), 1.0);
+    let r_out_perp = eta_i_over_eta_t * (*uv + cos_theta * *n);
+    let r_out_parallel = - f64::sqrt(f64::abs(1.0 - r_out_perp.length_squared())) * *n;
+    return r_out_perp + r_out_parallel;
+}
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let p = Vec3::from_xyz(random_f64_range(-1.0, 1.0), random_f64_range(-1.0, 1.0), 0.0);
+        if p.length_squared() < 1.0 {
+            return p;
+        }
+    }
+}

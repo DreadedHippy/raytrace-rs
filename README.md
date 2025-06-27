@@ -183,5 +183,45 @@ We can read this as "any point `p` which satisfies the equation above is on the 
 - Attenuation of light refers to the gradual decrease in the intensity of light as it propagates through a medium.
 - We will choose to always scatter, so implementing Lambertian materials becomes a simple task.
 - In our implementation of Lambertian reflection, we could scatter with some fixed probability p and have attenuation be albedo/p
-- In out implementation, if we have our random_vector, and normal_vector add up to 0, we may get some undesired behavior (infinities, NaNa), so we account for that by checking if the resultant vector is near zero and replacing it with hit_record normal if true.
+- In out implementation, if we have our random_vector, and normal_vector add up to 0, we may get some undesired behavior (infinities, NaNs), so we account for that by checking if the resultant vector is near zero and replacing it with hit_record normal if true.
+### Ray reflection
+- For any ray, the reflected direction is v + 2b where 
+- Since the normal points straight up from a surface, b is the vertical height of the ray. or the height of the ray in the direction of the normal
+- Since n is a unit vector (length of 1), and v may not be, To get the vector b , we scale the normal vector by the length of the projection of v onto n, which is given by the dot product v⋅n
+- If n were not a unit vector, we would also need to divide this dot product by the length of n
+- Finally, because v points into the surface, and we want b to point out of the surface, we need to negate this projection length.
+### Fuzzy Reflection
+- We can also randomize the reflected direction by using a small sphere at the endpoint of the ray and choosing a new endpoint for the ray which is on the surface of this small sphere at the ray endpoint.
+- The bigger the fuzz sphere, the fuzzier the reflections will be.
+- For the fuzz sphere to make sense, it needs to be consistently scaled compared to the reflection vector, which can vary in length arbitrarily. To address this, we need to normalize the reflected ray.
+
+
+## Dielectrics
+- Clear materials such as water, glass, and diamond are dielectrics. When a light ray hits them, it splits into a reflected ray and a refracted (transmitted) ray.
+- We’ll handle that by randomly choosing between reflection and refraction, only generating one scattered ray per interaction.
+- The amount that a refracted ray bends is determined by the material's refractive index.
+- Generally, this is a single value that describes how much light bends when entering a material from a vacuum.
+- Glass has a refractive index of something like 1.5–1.7, diamond is around 2.4, and air has a small refractive index of 1.000293.
+- When a transparent material is embedded in a different transparent material, you can describe the refraction with a relative refraction index: the refractive index of the object's material divided by the refractive index of the surrounding material.
+- For example, if you want to render a glass ball under water, then the glass ball would have an effective refractive index of 1.125. This is given by the refractive index of glass (1.5) divided by the refractive index of water (1.333).
+
+## Snell's Law
+The refraction is described by Snell’s law:
+- η⋅sinθ=η′⋅sinθ′
+- Where θ and θ′ are the angles from the normal, and η and η′ (pronounced “eta” and “eta prime”) are the refractive indices.
+- In order to determine the direction of the refracted ray, we have to solve for sinθ′: sinθ′= (η/η′)⋅sinθ
+- On the refracted side of the surface there is a refracted ray R′ and a normal n′, and there exists an angle, θ′, between them.
+- We can split R′ into the parts of the ray that are perpendicular to n′ and parallel to n′:
+- R′=R′⊥+R′∥
+- R′⊥=ηη′(R+|R|cos(θ)n)
+- R′∥= − sqrt(1−((|R′⊥|^2)*n))
+- We know the value of every term on the right-hand side except for cosθ
+- It is well known that the dot product of two vectors can be explained in terms of the cosine of the angle between them:
+- a⋅b=|a||b|cosθ
+- If we restrict a and b to be unit vectors:
+- a⋅b=cosθ
+- We can now rewrite R′⊥ in terms of known quantities:
+- R′⊥=(η/η′)(R+(−R⋅n)n)
+- When we combine them back together, we can write a function to calculate R′:
+
 
