@@ -1,5 +1,6 @@
 Simple graphics renderer from scratch in Rust.
-
+# Final result of book 1
+![Raytraced image (100x resolution)](raytracer_100x.png)
 # What I've learned.
 - Whenever you start a renderer, you need a way to see an image. The most straightforward way is to write it to a file.
 - There are many file formats but for the purpose of this book, we will start with a plain text ppm file
