@@ -1,4 +1,4 @@
-use std::{f64::consts::PI, io::{self, Write}, sync::{atomic::AtomicI32, Arc, Mutex}, thread};
+use std::{f64::consts::PI, io::{self, Write}, sync::{atomic::AtomicI32, Arc, Mutex}};
 use rayon::prelude::*;
 
 use crate::{color::{write_color, Color}, hittable::{HitRecord, Hittable}, interval::Interval, rand::random_f64, ray::Ray, vec3::{random_in_unit_disk, Point3, Vec3}};
@@ -88,7 +88,7 @@ impl Camera {
 			}
 		}
 
-		io::stdout().flush();
+		let _ = io::stdout().flush();
 
 		eprint!("\rDone         ");
 	}

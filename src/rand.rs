@@ -1,4 +1,4 @@
-use std::cell::{Cell, OnceCell};
+use std::cell::Cell;
 
 
 const KX: u32 = 123456789;
@@ -11,19 +11,6 @@ thread_local! {
 	static RANDOM: Cell<Rand> = const { Cell::new(Rand {x: KX, y: KY, z: KZ, w: KW}) };
 }
 
-
-fn rand() -> u32 {
-	// get
-	let mut s = RANDOM.get();
-
-	// mutate
-	let result = s.rand();
-
-	// set
-	RANDOM.set(s);
-
-	return result;
-}
 
 pub fn shuffle<T>(a: &mut [T]) {
 	let mut s = RANDOM.get();
@@ -45,16 +32,6 @@ pub fn rand_range(a: i32, b: i32) -> i32 {
 	let result = s.rand_range(a, b);
 
 	// set
-	RANDOM.set(s);
-
-	return result;
-}
-
-fn rand_float() -> f64 {
-	let mut s = RANDOM.get();
-
-	let result = s.rand_float();
-
 	RANDOM.set(s);
 
 	return result;
@@ -121,10 +98,6 @@ impl Rand{
 	pub fn rand_range(&mut self, a: i32, b: i32) -> i32 {
 		let m = (b-a+1) as u32;
 		return a+(self.rand()%m) as i32;
-	}
-
-	pub fn rand_float(&mut self) -> f64 {
-		(self.rand() as f64)/(<u32>::max_value() as f64)
 	}
 
 	pub fn random_f64(&mut self) -> f64 {

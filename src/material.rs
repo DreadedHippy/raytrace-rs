@@ -21,7 +21,7 @@ impl Lambertian {
 }
 
 impl Material for Lambertian {
-	fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
+	fn scatter(&self, _r_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
 		let mut scatter_direction = rec.normal + random_unit_vector();
 
 		// Catch degenerate scatter direction i.e, random vector is opposite direction of normal

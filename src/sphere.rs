@@ -1,4 +1,4 @@
-use std::{sync::{Arc, Mutex}};
+use std::sync::Arc;
 
 use crate::{hittable::{HitRecord, Hittable}, interval::Interval, material::{Material}, ray::Ray, vec3::{Point3, Vec3}};
 

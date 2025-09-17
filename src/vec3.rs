@@ -63,7 +63,7 @@ impl Vec3 {
       return *v / v.length()
     }
 
-    pub fn iter(&self) -> Vec3Iterator {
+    pub fn iter(&'_ self) -> Vec3Iterator<'_> {
         Vec3Iterator { vec3: self, index: 0 }
     }
 
@@ -216,7 +216,7 @@ pub fn random_unit_vector() -> Vec3 {
         let lensq = p.length_squared();
         // black hole point
         let blackhole = 1e-160;
-        if (blackhole < lensq && lensq <= 1.0) {
+        if blackhole < lensq && lensq <= 1.0 {
             return p/lensq.sqrt()
         }
     }

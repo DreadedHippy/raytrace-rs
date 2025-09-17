@@ -1,6 +1,6 @@
 use core::f64;
-use std::{f64::consts::PI, sync::Arc};
-use crate::{camera::Camera, color::{write_color, Color}, cube::Cube, hittable::{HitRecord, Hittable}, hittable_list::HittableList, interval::Interval, material::{Dielectric, Lambertian, Metal}, rand::{random_f64, random_f64_range}, ray::Ray, sphere::Sphere, vec3::{Point3, Vec3}};
+use std::sync::Arc;
+use crate::{camera::Camera, color::Color, hittable_list::HittableList, material::{Dielectric, Lambertian, Metal}, rand::{random_f64, random_f64_range}, sphere::Sphere, vec3::{Point3, Vec3}};
 
 
 pub mod vec3;
