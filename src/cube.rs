@@ -1,16 +1,19 @@
-use crate::{hittable::Hittable, interval::Interval, vec3::{Point3, Vec3}};
+use std::sync::Arc;
+
+use crate::{hittable::Hittable, interval::Interval, material::Material, vec3::{Point3, Vec3}};
 
 pub struct Cube {
 	pub center: Point3,
-	pub side_length: f64
+	pub side_length: f64,
+	pub mat: Arc<dyn Material>
 }
 
 // Parallel ray epsilon
 const E: f64 = 0.000001;
 
 impl Cube {
-	pub fn new(center: &Point3, side_length: f64) -> Self {
-		Self { center: center.clone(), side_length: f64::max(0.0, side_length) }
+	pub fn new(center: &Point3, side_length: f64, mat: Arc<dyn Material>) -> Self {
+		Self { center: center.clone(), side_length: f64::max(0.0, side_length), mat }
 	}
 }
 
@@ -52,7 +55,7 @@ impl Hittable for Cube {
 		
     // if v1 <= t*d <= v2 for any given t
     // let set our t between 0, and infinity i.e f64::MAX
-    let mut t_min = f64::MIN;
+    let mut t_min = 0.0_f64;
     let mut t_max = f64::MAX;
 
 		// Now we iterate through all axes, maximizing t_max and minimizing t_min, which are the points of intersection between ray and cube.
@@ -104,18 +107,20 @@ impl Hittable for Cube {
 		// 	}
 		// }
 
-		// t_min is lower than tmax and is the first point of intersection of the ray
+		// t_min is lower than t_max and is the first point of intersection of the ray
 		rec.t = t_min;
 		rec.p = r.at(rec.t);
 		let mut outward_normal = Vec3::new();
-		if hit_axis != 3 {
+		// if hit_axis != 3 {
 			outward_normal =  match hit_axis {
 			0 => Vec3::from_xyz(hit_sign as f64, 0.0, 0.0),
 			1 => Vec3::from_xyz(0.0 , hit_sign as f64, 0.0),
 			_ => Vec3::from_xyz(0.0 , 0.0, hit_sign as f64),
 			};
-		}
+		// }
+
 		rec.set_face_normal(r, &outward_normal);
+		rec.mat = self.mat.clone();
 		
     return true;
 
