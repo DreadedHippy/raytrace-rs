@@ -33,7 +33,9 @@ fn main() {
                     // diffuse
                     let albedo = Color::random() * Color::random();
                     let sphere_material = Arc::new(Lambertian::new(albedo));
-                    world.add(Arc::new(Sphere::new(&center, 0.2, sphere_material)));
+
+					let center2 = center + Vec3::from_xyz(0.0, random_f64_range(0.0, 0.5), 0.0);
+                    world.add(Arc::new(Sphere::new_moving(&center, &center2, 0.2, sphere_material)));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Color::random_range(0.5, 1.0);
@@ -64,7 +66,7 @@ fn main() {
 
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 1200;
-    cam.samples_per_pixel = 100; // reduce for faster render times
+    cam.samples_per_pixel = 50; // reduce for faster render times
     cam.max_depth         = 50;
 
     cam.vfov     = 20;

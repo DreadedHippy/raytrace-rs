@@ -149,7 +149,8 @@ impl Camera {
 
 		let ray_origin = if self.defocus_angle <= 0.0 {self.center} else {self.defocus_disk_sample()};
 		let ray_direction = pixel_sample - ray_origin;
-		return Ray::from_values(&ray_origin, &ray_direction)
+		let ray_time = random_f64();
+		return Ray::from_values(&ray_origin, &ray_direction, &ray_time);
 
 	}
 

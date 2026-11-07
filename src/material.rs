@@ -26,7 +26,7 @@ impl Material for Lambertian {
 
 		// Catch degenerate scatter direction i.e, random vector is opposite direction of normal
 		if scatter_direction.near_zero() {scatter_direction = rec.normal}
-		*scattered = Ray::from_values(&rec.p, &scatter_direction);
+		*scattered = Ray::from_values(&rec.p, &scatter_direction, &_r_in.time());
 		*attenuation = self.albedo;
 		return true;
 	}
@@ -48,7 +48,7 @@ impl Material for Metal {
 	fn scatter(&self, r_in: &Ray, rec: &HitRecord, attenuation: &mut Color, scattered: &mut Ray) -> bool {
 		let reflected = reflect(&r_in.direction(), &rec.normal);
 		let reflected = Vec3::unit_vector(&reflected) + (self.fuzz * random_unit_vector());
-		*scattered = Ray::from_values(&rec.p, &reflected);
+		*scattered = Ray::from_values(&rec.p, &reflected, &r_in.time());
 		*attenuation = self.albedo;
 		return Vec3::dot(&scattered.direction(), &rec.normal) > 0.0;
 	}
@@ -90,7 +90,7 @@ impl Material for Dielectric {
 			refract(&unit_direction, &rec.normal, ri)
 		};
 
-		*scattered = Ray::from_values(&rec.p, &direction);
+		*scattered = Ray::from_values(&rec.p, &direction, &r_in.time());
 		return true;
 	}	
 }
